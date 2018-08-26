@@ -63,11 +63,8 @@ fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, Box<dyn Error
     })
 }
 
-fn parse_article(link: &str) -> Result<Article, Box<dyn Error>> {
-    let html = reqwest::get(link)?.text()?;
-    let document = Document::from(html.as_str());
-
-    let news: Vec<Link> = document
+fn parse_news(doc: &Document) -> Result<Vec<Link>, Box<dyn Error>> {
+    Ok(doc
         .find(Attr("id", "news-blog-posts"))
         .next()
         .unwrap()
@@ -77,13 +74,21 @@ fn parse_article(link: &str) -> Result<Article, Box<dyn Error>> {
         .unwrap()
         .find(Name("ul").descendant(Name("li")))
         .map(|node| node.into())
-        .collect();
-
-    let crate_of_week = parse_crate_of_week(&document)?;
-
-    Ok(Article { news, crate_of_week })
+        .collect())
 }
 
+fn parse_article(link: &str) -> Result<Article, Box<dyn Error>> {
+    let html = reqwest::get(link)?.text()?;
+    let document = Document::from(html.as_str());
+
+    let news = parse_news(&document)?;
+    let crate_of_week = parse_crate_of_week(&document)?;
+
+    Ok(Article {
+        news,
+        crate_of_week,
+    })
+}
 
 fn run() -> Result<(), Box<dyn Error>> {
     let last_id = 245;
