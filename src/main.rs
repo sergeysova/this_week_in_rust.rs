@@ -5,6 +5,8 @@ extern crate select;
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
 
+use std::error::Error;
+
 #[derive(Debug)]
 struct Link {
     link: String,
@@ -23,11 +25,45 @@ impl<'a> Into<Link> for select::node::Node<'a> {
 }
 
 #[derive(Debug)]
-struct Article {
-    news: Vec<Link>,
+struct CrateOfWeek {
+    name: String,
+    text: String,
+    link: String,
 }
 
-fn parse_article(link: &str) -> Result<Article, Box<std::error::Error>> {
+#[derive(Debug)]
+struct Article {
+    news: Vec<Link>,
+    crate_of_week: CrateOfWeek,
+}
+
+fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, Box<dyn Error>> {
+    let p = document
+        .find(Attr("id", "crate-of-the-week"))
+        .next()
+        .unwrap()
+        .next()
+        .unwrap()
+        .next()
+        .unwrap();
+
+    let text = p.text();
+    let link = p
+        .find(Name("a"))
+        .take(1)
+        .map(|node| (node.attr("href").unwrap(), node.text()))
+        .collect::<Vec<_>>();
+
+    let (link, name) = link.get(0).unwrap();
+
+    Ok(CrateOfWeek {
+        name: name.to_string(),
+        text: text.to_string(),
+        link: link.to_string(),
+    })
+}
+
+fn parse_article(link: &str) -> Result<Article, Box<dyn Error>> {
     let html = reqwest::get(link)?.text()?;
     let document = Document::from(html.as_str());
 
@@ -43,10 +79,13 @@ fn parse_article(link: &str) -> Result<Article, Box<std::error::Error>> {
         .map(|node| node.into())
         .collect();
 
-    Ok(Article { news })
+    let crate_of_week = parse_crate_of_week(&document)?;
+
+    Ok(Article { news, crate_of_week })
 }
 
-fn run() -> Result<(), Box<std::error::Error>> {
+
+fn run() -> Result<(), Box<dyn Error>> {
     let last_id = 245;
 
     let html = reqwest::get("https://this-week-in-rust.org")?.text()?;
@@ -71,7 +110,7 @@ fn run() -> Result<(), Box<std::error::Error>> {
         println!("Fetching #{} — {}", id, link);
         let res = parse_article(link)?;
 
-        println!("{}", res);
+        println!("{:?}", res);
     }
 
     Ok(())
