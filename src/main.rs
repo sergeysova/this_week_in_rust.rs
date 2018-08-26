@@ -1,58 +1,55 @@
 extern crate env_logger;
-extern crate kuchiki;
 extern crate reqwest;
 extern crate select;
-
-// use kuchiki::traits::TendrilSink;
-// use kuchiki::iter::*;
-
-// fn run() -> Result<(), Box<std::error::Error>> {
-//     let mut res = reqwest::get("https://this-week-in-rust.org")?;
-
-//     let last_id = 247;
-
-//     println!("{} — {}", res.url(), res.status());
-//     let html = res.text()?;
-//     let document = kuchiki::parse_html().one(html);
-
-//     let _: Vec<_> = document
-//         .select(".row.post-title")
-//         .unwrap()
-//         .map(|row| {
-//             let node = row.as_node();
-//             node.select("a")
-//                 .unwrap()
-//                 .map(|a| {
-//                     let node = a.as_node();
-//                     println!("{}", node.to_string());
-//                     node
-//                 })
-//                 .next()
-//                 .unwrap()
-//         })
-//         .filter(|node| {
-//             node
-//         })
-//         .collect();
-
-//     Ok(())
-// }
-
-use reqwest::StatusCode;
 
 use select::document::Document;
 use select::predicate::{Attr, Class, Name, Predicate};
 
-fn run() -> Result<(), Box<std::error::Error>> {
-    let mut res = reqwest::get("https://this-week-in-rust.org")?;
+#[derive(Debug)]
+struct Link {
+    link: String,
+    text: String,
+}
 
-    let last_id = 247;
-
-    match res.status() {
-        StatusCode::Ok => {}
-        _ => panic!("Got not OK"),
+impl<'a> Into<Link> for select::node::Node<'a> {
+    fn into(self) -> Link {
+        let text = self.text().replace(". [discuss]", "");
+        let link = self.find(Name("a")).next().unwrap().attr("href").unwrap();
+        Link {
+            link: link.to_string(),
+            text: text,
+        }
     }
-    let html = res.text()?;
+}
+
+#[derive(Debug)]
+struct Article {
+    news: Vec<Link>,
+}
+
+fn parse_article(link: &str) -> Result<Article, Box<std::error::Error>> {
+    let html = reqwest::get(link)?.text()?;
+    let document = Document::from(html.as_str());
+
+    let news: Vec<Link> = document
+        .find(Attr("id", "news-blog-posts"))
+        .next()
+        .unwrap()
+        .next()
+        .unwrap()
+        .next()
+        .unwrap()
+        .find(Name("ul").descendant(Name("li")))
+        .map(|node| node.into())
+        .collect();
+
+    Ok(Article { news })
+}
+
+fn run() -> Result<(), Box<std::error::Error>> {
+    let last_id = 245;
+
+    let html = reqwest::get("https://this-week-in-rust.org")?.text()?;
 
     let document = Document::from(html.as_str());
 
@@ -71,7 +68,10 @@ fn run() -> Result<(), Box<std::error::Error>> {
         .collect();
 
     for (id, link) in links {
-        println!("{} — {}", id, link);
+        println!("Fetching #{} — {}", id, link);
+        let res = parse_article(link)?;
+
+        println!("{}", res);
     }
 
     Ok(())

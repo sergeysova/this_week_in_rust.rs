@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Sergey Sova <mail@sergeysova.com>"]
 
 [dependencies]
-kuchiki = "0.7.1"
 reqwest = "0.8.8"
 env_logger = "0.5.12"
 select = "0.4.2"
