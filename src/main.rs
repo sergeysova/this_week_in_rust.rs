@@ -13,10 +13,10 @@ struct Link {
     text: String,
 }
 
-impl<'a> Into<Link> for select::node::Node<'a> {
-    fn into(self) -> Link {
-        let text = self.text().replace(". [discuss]", "");
-        let link = self.find(Name("a")).next().unwrap().attr("href").unwrap();
+impl Link {
+    fn from_node<'a>(node: select::node::Node<'a>) -> Link {
+        let text = node.text().replace(". [discuss]", "");
+        let link = node.find(Name("a")).next().unwrap().attr("href").unwrap();
         Link {
             link: link.to_string(),
             text: text,
@@ -35,6 +35,7 @@ struct CrateOfWeek {
 struct Article {
     news: Vec<Link>,
     crate_of_week: CrateOfWeek,
+    updates: Vec<Link>,
 }
 
 fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, Box<dyn Error>> {
@@ -73,8 +74,23 @@ fn parse_news(doc: &Document) -> Result<Vec<Link>, Box<dyn Error>> {
         .next()
         .unwrap()
         .find(Name("ul").descendant(Name("li")))
-        .map(|node| node.into())
+        .map(Link::from_node)
         .collect())
+}
+
+fn parse_updates_from_core(doc: &Document) -> Result<Vec<Link>, Box<dyn Error>> {
+    Ok(
+        doc
+        .find(Attr("id", "updates-from-rust-core"))
+        .next().unwrap()
+        .next().unwrap()
+        .next().unwrap()
+        .next().unwrap()
+        .next().unwrap()
+        .find(Name("ul").descendant(Name("li")))
+        .map(Link::from_node)
+        .collect()
+    )
 }
 
 fn parse_article(link: &str) -> Result<Article, Box<dyn Error>> {
@@ -83,10 +99,12 @@ fn parse_article(link: &str) -> Result<Article, Box<dyn Error>> {
 
     let news = parse_news(&document)?;
     let crate_of_week = parse_crate_of_week(&document)?;
+    let updates = parse_updates_from_core(&document)?;
 
     Ok(Article {
         news,
         crate_of_week,
+        updates,
     })
 }
 
