@@ -105,7 +105,7 @@ impl fmt::Display for Article {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "<b>#{id}</b> — <a href={link}>{date}</a>\n\n{news}\n\n{crate}\n\n{updates}",
+            "<b>#{id}</b> — <a href=\"{link}\">{date}</a>\n\n{news}\n\n{crate}\n\n{updates}",
             id = self.id,
             link = self.link,
             date = self.date,

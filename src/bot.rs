@@ -1,17 +1,54 @@
+use hyper::header::{ContentLength, ContentType};
 use reqwest;
+use reqwest::Url;
+use serde::Serialize;
+use serde_json;
 
+type ReqwestResult = reqwest::Result<reqwest::Response>;
 
 const URL: &'static str = "https://api.telegram.org/bot";
 
-pub fn request<T: AsRef<str>, M: AsRef<str>>(token: T, method: M) {
-    let url = format!(
-        "{url}{token}/{method}",
-        url = URL,
-        token = token.as_ref(),
-        method = method.as_ref()
-    );
+#[derive(Debug)]
+pub struct Bot {
+    token: String,
+}
 
-    // reqwest::Client::new().post(url)
+impl Bot {
+    pub fn new(token: String) -> Self {
+        Bot { token }
+    }
+
+    pub fn send(&self, method: impl Into<String>, body: impl Serialize) -> ReqwestResult {
+        let method: String = method.into();
+        let url = format!(
+            "{url}{token}/{method}",
+            url = URL,
+            token = self.token,
+            method = method,
+        );
+
+        let href = Url::parse(url.as_str()).unwrap();
+        let mut req = reqwest::Client::new().post(href);
+        let content = serde_json::to_string(&body).unwrap();
+        let content_len = content.len();
+
+        // Because, req.json(&body) sends noise instead of JSON
+        req.body(content);
+        req.header(ContentType::json());
+        req.header(ContentLength(content_len as u64));
+        req.send()
+    }
+
+    pub fn send_message(&self, chat_id: String, text: String) -> ReqwestResult {
+        let body = SendMessage {
+            chat_id,
+            text,
+            parse_mode: "HTML".to_string(),
+            disable_web_page_preview: true,
+        };
+
+        self.send("sendMessage", &body)
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -20,4 +57,15 @@ struct SendMessage {
     text: String,
     parse_mode: String,
     disable_web_page_preview: bool,
+}
+
+impl Default for SendMessage {
+    fn default() -> Self {
+        SendMessage {
+            chat_id: "".to_string(),
+            text: "".to_string(),
+            parse_mode: "HTML".to_string(),
+            disable_web_page_preview: false,
+        }
+    }
 }

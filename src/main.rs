@@ -5,6 +5,7 @@ extern crate select;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
+extern crate hyper;
 extern crate serde_json;
 
 use dotenv::dotenv;
@@ -35,7 +36,10 @@ fn save_last_id(id: i32) -> std::io::Result<()> {
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-    let bot_token = env::var("BOT_TOKEN").ok().expect("Expected BOT_TOKEN env var");
+    let bot_token = env::var("BOT_TOKEN")
+        .ok()
+        .expect("Expected BOT_TOKEN env var");
+    let chat_id = env::var("CHAT_ID").ok().expect("Expected CHAT_ID env var");
 
     let last_id = read_last_id().unwrap_or(0);
     let mut last_id_to_be_saved = last_id;
@@ -49,11 +53,15 @@ fn run() -> Result<(), Box<dyn Error>> {
     if links.len() == 0 {
         println!("Nothing to send");
     } else {
+        let bot = bot::Bot::new(bot_token);
+
         for (ref id, link) in links.iter().rev() {
             println!("\n// ——— //\nFetching #{} — {}", id, link);
             let res = parse_article(link, *id)?;
 
-            println!("{}", res);
+            let text = format!("{}", res);
+
+            bot.send_message(chat_id.clone(), text)?;
 
             if *id > last_id_to_be_saved {
                 last_id_to_be_saved = *id;
