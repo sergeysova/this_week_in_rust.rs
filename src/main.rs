@@ -23,24 +23,23 @@ fn read_last_id() -> Result<i32, Box<dyn Error + 'static>> {
     Ok(value)
 }
 
-// TODO: refactor to use with std::fs::OpenOptions
 fn save_last_id(id: i32) -> Result<(), Box<dyn Error + 'static>> {
-    if let Err(_) = fs::write(SAVE_PATH, id.to_string()) {
-        let mut file = fs::File::create(SAVE_PATH)?;
-        file.write_all(id.to_string().as_bytes())?;
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .open(SAVE_PATH)?;
 
-        Ok(())
-    } else {
-        Ok(())
-    }
+    file.write_all(id.to_string().as_bytes())?;
+
+    Ok(())
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
     let last_id = read_last_id().unwrap_or(0);
     let mut last_id_to_be_saved = last_id;
 
-    println!("Now last ID is: {}", last_id);
-    println!("Start fetching list...");
+    println!("Last ID: {}", last_id);
+    println!("Starting fetch articles list...");
     let html = reqwest::get("https://this-week-in-rust.org")?.text()?;
     let document = Document::from(html.as_str());
     let links = parse_home_page(&document, last_id);
@@ -62,7 +61,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         save_last_id(last_id_to_be_saved)?;
     }
 
-    println!("Last ID now: {}", last_id_to_be_saved);
+    println!("Last ID: {}", last_id_to_be_saved);
 
     Ok(())
 }
