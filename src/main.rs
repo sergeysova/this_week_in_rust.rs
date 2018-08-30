@@ -1,13 +1,21 @@
+extern crate dotenv;
 extern crate env_logger;
 extern crate reqwest;
 extern crate select;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde_json;
 
+use dotenv::dotenv;
 use select::document::Document;
 
+use std::env;
 use std::error::Error;
 use std::fs;
 use std::io::Write;
 
+mod bot;
 mod parsers;
 mod types;
 
@@ -23,18 +31,13 @@ fn read_last_id() -> Result<i32, Box<dyn Error + 'static>> {
     Ok(value)
 }
 
-fn save_last_id(id: i32) -> Result<(), Box<dyn Error + 'static>> {
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open(SAVE_PATH)?;
-
-    file.write_all(id.to_string().as_bytes())?;
-
-    Ok(())
+fn save_last_id(id: i32) -> std::io::Result<()> {
+    fs::write(SAVE_PATH, id.to_string())
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
+    let bot_token = env::var("BOT_TOKEN")?;
+
     let last_id = read_last_id().unwrap_or(0);
     let mut last_id_to_be_saved = last_id;
 
@@ -68,6 +71,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 fn main() {
     env_logger::init();
+    dotenv().unwrap();
 
     run().unwrap();
 }
