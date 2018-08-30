@@ -13,7 +13,6 @@ use select::document::Document;
 use std::env;
 use std::error::Error;
 use std::fs;
-use std::io::Write;
 
 mod bot;
 mod parsers;
@@ -36,7 +35,7 @@ fn save_last_id(id: i32) -> std::io::Result<()> {
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
-    let bot_token = env::var("BOT_TOKEN")?;
+    let bot_token = env::var("BOT_TOKEN").ok().expect("Expected BOT_TOKEN env var");
 
     let last_id = read_last_id().unwrap_or(0);
     let mut last_id_to_be_saved = last_id;
@@ -71,7 +70,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
 fn main() {
     env_logger::init();
-    dotenv().unwrap();
+    dotenv().expect("Failed to run dotenv");
 
     run().unwrap();
 }
