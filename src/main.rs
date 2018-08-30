@@ -19,23 +19,11 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     let document = Document::from(html.as_str());
 
-    let links: Vec<(i32, &str)> = document
-        .find(Class("post-title").descendant(Name("a")))
-        .map(|node| {
-            let title = node.text();
-            let numb = title.split(" ").last().unwrap();
+    let links = parse_home_page(&document, last_id);
 
-            (
-                numb.to_string().parse().unwrap(),
-                node.attr("href").unwrap(),
-            )
-        })
-        .filter(|(id, _)| *id > last_id)
-        .collect();
-
-    for (id, link) in links {
+    for (ref id, link) in links {
         println!("\n———\nFetching #{} — {}", id, link);
-        let res = parse_article(link, id)?;
+        let res = parse_article(link, *id)?;
 
         println!("{}", res);
     }

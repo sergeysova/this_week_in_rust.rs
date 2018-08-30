@@ -68,7 +68,13 @@ pub fn parse_updates_from_core(doc: &Document) -> Result<Vec<Link>, Box<dyn Erro
 }
 
 pub fn parse_article_date(doc: &Document) -> Result<String, Box<dyn Error>> {
-    Ok(doc.find(Class("time-prefix")).next().unwrap().text().trim().to_string())
+    Ok(doc
+        .find(Class("time-prefix"))
+        .next()
+        .unwrap()
+        .text()
+        .trim()
+        .to_string())
 }
 
 pub fn parse_article(link: &str, id: i32) -> Result<Article, Box<dyn Error>> {
@@ -88,4 +94,19 @@ pub fn parse_article(link: &str, id: i32) -> Result<Article, Box<dyn Error>> {
         crate_of_week,
         updates,
     })
+}
+
+pub fn parse_home_page(doc: &Document, last_id: i32) -> Vec<(i32, &str)> {
+    doc.find(Class("post-title").descendant(Name("a")))
+        .map(|node| {
+            let title = node.text();
+            let numb = title.split(" ").last().unwrap();
+
+            (
+                numb.to_string().parse().unwrap(),
+                node.attr("href").unwrap(),
+            )
+        })
+        .filter(|(id, _)| *id > last_id)
+        .collect()
 }
