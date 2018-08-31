@@ -4,9 +4,14 @@ rust:
   - beta
   - nightly
 
+os:
+  - osx
+  - linux
+
 matrix:
   allow_failures:
     - rust: nightly
+
 fast_finish: true
 cache: cargo
 before_script:
