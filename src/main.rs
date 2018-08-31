@@ -57,11 +57,15 @@ fn run() -> Result<(), Box<dyn Error>> {
 
         for (ref id, link) in links.iter().rev() {
             println!("\n// ——— //\nFetching #{} — {}", id, link);
-            let res = parse_article(link, *id)?;
+            let article = parse_article(link, *id)?;
 
-            let text = format!("{}", res);
+            let mut _res = bot.send_message(chat_id.clone(), article.head())?;
 
-            bot.send_message(chat_id.clone(), text)?;
+            let mut _res = bot.send_message(chat_id.clone(), article.updates())?;
+
+            let mut _res = bot.send_message(chat_id.clone(), article.news())?;
+
+            let mut _res = bot.send_message(chat_id.clone(), article.crate_of_week())?;
 
             if *id > last_id_to_be_saved {
                 last_id_to_be_saved = *id;

@@ -22,7 +22,7 @@ impl Link {
 
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<a href=\"{}\">{}</a>", self.link, self.text)
+        write!(f, "{text}\n{link}\n", link = self.link, text = self.text)
     }
 }
 
@@ -53,7 +53,7 @@ impl News {
 
 impl fmt::Display for News {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<b>News</b>\n{}", self.0)
+        write!(f, "<b>News</b>\n\n{}", self.0)
     }
 }
 
@@ -68,7 +68,7 @@ impl fmt::Display for CrateOfWeek {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "<b>Crate of the week:</b> <a href=\"{link}\">{name}</a>\n{text}\n",
+            "<b>Crate of the week:</b> <a href=\"{link}\">{name}</a>\n\n{text}\n",
             link = self.link,
             name = self.name,
             text = self.text
@@ -87,7 +87,7 @@ impl Updates {
 
 impl fmt::Display for Updates {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<b>Updates from core</b>\n{}", self.0)
+        write!(f, "<b>Updates from core</b>\n\n{}", self.0)
     }
 }
 
@@ -101,17 +101,25 @@ pub struct Article {
     pub(super) updates: Updates,
 }
 
-impl fmt::Display for Article {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "<b>#{id}</b> — <a href=\"{link}\">{date}</a>\n\n{news}\n\n{crate}\n\n{updates}",
+impl Article {
+    pub fn head(&self) -> String {
+        format!(
+            "<b>This week in Rust #{id}</b> — {date}\n\n{link}",
             id = self.id,
             link = self.link,
-            date = self.date,
-            news = self.news,
-            crate = self.crate_of_week,
-            updates = self.updates,
+            date = self.date.to_lowercase()
         )
+    }
+
+    pub fn news(&self) -> String {
+        format!("{}", self.news)
+    }
+
+    pub fn crate_of_week(&self) -> String {
+        format!("{}", self.crate_of_week)
+    }
+
+    pub fn updates(&self) -> String {
+        format!("{}", self.updates)
     }
 }
