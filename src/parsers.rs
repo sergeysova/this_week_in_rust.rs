@@ -7,6 +7,7 @@ use select::predicate::{Attr, Class, Name, Predicate};
 
 use std::error::Error;
 
+use html::escape;
 use types::*;
 
 pub fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, Box<dyn Error>> {
@@ -29,9 +30,9 @@ pub fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, Box<dyn E
     let (link, name) = link.get(0).unwrap();
 
     Ok(CrateOfWeek {
-        name: name.to_string(),
-        text: text.to_string(),
-        link: link.to_string(),
+        name: escape(name.to_string()),
+        text: escape(text.to_string()),
+        link: escape(link.to_string()),
     })
 }
 

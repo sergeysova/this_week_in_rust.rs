@@ -3,6 +3,8 @@ use std::fmt;
 use select;
 use select::predicate::Name;
 
+use html::escape;
+
 #[derive(Debug)]
 pub struct Link {
     link: String,
@@ -14,8 +16,8 @@ impl Link {
         let text = node.text().replace(". [discuss]", "");
         let link = node.find(Name("a")).next().unwrap().attr("href").unwrap();
         Link {
-            link: link.to_string(),
-            text: text,
+            link: escape(link.to_string()),
+            text: escape(text),
         }
     }
 }

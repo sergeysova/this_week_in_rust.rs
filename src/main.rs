@@ -16,6 +16,7 @@ use std::error::Error;
 use std::fs;
 
 mod bot;
+mod html;
 mod parsers;
 mod types;
 
