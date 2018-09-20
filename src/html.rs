@@ -1,6 +1,6 @@
 pub fn escape(text: String) -> String {
-    text.replace("\"", "&quot;")
-        .replace("&", "&amp;")
+    text.replace("&", "&amp;")
+        .replace("\"", "&quot;")
         .replace("<", "&lt;")
         .replace(">", "&gt;")
 }
