@@ -1,6 +1,6 @@
 [package]
 name = "this_week_in_rust"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Sergey Sova <mail@sergeysova.com>"]
 
 [dependencies]
