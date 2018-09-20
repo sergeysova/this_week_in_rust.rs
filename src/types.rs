@@ -125,3 +125,40 @@ impl Article {
         format!("{}", self.updates)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn link_fmt() {
+        let link = Link {
+            link: "FOO".to_string(),
+            text: "BAR".to_string(),
+        };
+
+        assert_eq!(format!("{}", link), "BAR\nFOO\n".to_string());
+    }
+
+    #[test]
+    fn links_fmt() {
+        let links = LinksList(vec![
+            Link {
+                link: "linkA".to_string(),
+                text: "textA".to_string(),
+            },
+            Link {
+                link: "linkB".to_string(),
+                text: "textB".to_string(),
+            },
+            Link {
+                link: "linkC".to_string(),
+                text: "textC".to_string(),
+            },
+        ]);
+
+        let expected = "textA\nlinkA\n\ntextB\nlinkB\n\ntextC\nlinkC\n".to_string();
+
+        assert_eq!(format!("{}", links), expected);
+    }
+}
