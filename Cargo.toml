@@ -1,6 +1,6 @@
 [package]
 name = "this_week_in_rust"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Sergey Sova <mail@sergeysova.com>"]
 edition = "2018"
 
