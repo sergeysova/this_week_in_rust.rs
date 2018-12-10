@@ -1,9 +1,9 @@
 use std::fmt;
 
-use select;
-use select::predicate::Name;
+use crate::select;
+use crate::select::predicate::Name;
 
-use html::escape;
+use crate::html::escape;
 
 #[derive(Debug)]
 pub struct Link {
@@ -61,9 +61,9 @@ impl fmt::Display for News {
 
 #[derive(Debug)]
 pub struct CrateOfWeek {
-    pub(super) name: String,
-    pub(super) text: String,
-    pub(super) link: String,
+    pub name: String,
+    pub text: String,
+    pub link: String,
 }
 
 impl fmt::Display for CrateOfWeek {
@@ -121,7 +121,7 @@ impl Article {
         format!("{}", self.crate_of_week)
     }
 
-    pub fn updates(&self) -> String {
+    pub fn core_updates(&self) -> String {
         format!("{}", self.updates)
     }
 }

@@ -20,12 +20,16 @@ mod html;
 mod parsers;
 mod types;
 
-use parsers::*;
+use crate::parsers::*;
 
-const SAVE_PATH: &'static str = "/tmp/this_week_in_rust_last_id.txt";
+const FILE_NAME: &'static str = "this_week_in_rust.last_id";
+
+fn file_path() -> std::path::PathBuf {
+    dirs::config_dir().unwrap_or("/tmp/".into()).join(FILE_NAME)
+}
 
 fn read_last_id() -> Result<i32, Box<dyn Error + 'static>> {
-    let src = fs::read(SAVE_PATH)?;
+    let src = fs::read(file_path())?;
     let src = String::from_utf8_lossy(&src);
     let value: i32 = src.trim().parse()?;
 
@@ -33,7 +37,7 @@ fn read_last_id() -> Result<i32, Box<dyn Error + 'static>> {
 }
 
 fn save_last_id(id: i32) -> std::io::Result<()> {
-    fs::write(SAVE_PATH, id.to_string())
+    fs::write(file_path(), id.to_string())
 }
 
 fn run() -> Result<(), Box<dyn Error>> {
@@ -62,7 +66,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
             let mut _res = bot.send_message(chat_id.clone(), article.head())?;
 
-            let mut _res = bot.send_message(chat_id.clone(), article.updates())?;
+            let mut _res = bot.send_message(chat_id.clone(), article.core_updates())?;
 
             let mut _res = bot.send_message(chat_id.clone(), article.news())?;
 

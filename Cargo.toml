@@ -2,6 +2,7 @@
 name = "this_week_in_rust"
 version = "0.1.1"
 authors = ["Sergey Sova <mail@sergeysova.com>"]
+edition = "2018"
 
 [dependencies]
 reqwest = "=0.8.6"
@@ -12,3 +13,4 @@ serde = "1.0.75"
 serde_json = "1.0.26"
 serde_derive = "1.0.75"
 hyper = "=0.11.22"
+dirs = "1.0.4"

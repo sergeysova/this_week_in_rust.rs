@@ -7,8 +7,8 @@ use select::predicate::{Attr, Class, Name, Predicate};
 
 use std::error::Error;
 
-use html::escape;
-use types::*;
+use crate::html::escape;
+use crate::types::*;
 
 pub fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, Box<dyn Error>> {
     let p = document
