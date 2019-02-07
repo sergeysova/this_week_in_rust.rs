@@ -49,6 +49,35 @@ impl Bot {
 
         self.send("sendMessage", &body)
     }
+
+    pub fn forward_message(
+        &self,
+        from_chat_id: String,
+        chat_id: String,
+        message_id: usize,
+    ) -> ReqwestResult {
+        let body = ForwardMessage {
+            from_chat_id,
+            chat_id,
+            message_id,
+        };
+
+        self.send("sendMessage", &body)
+    }
+
+    pub fn response_id(mut res: reqwest::Response) -> Option<usize> {
+        res.text()
+            .ok()
+            .and_then(|text| serde_json::from_str(&text).ok())
+            .map(|msg: Message| msg.message_id)
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct Message {
+    message_id: usize,
+    // the rest fields are unused and might be extended based on:
+    // https://core.telegram.org/bots/api#message
 }
 
 #[derive(Debug, Serialize)]
@@ -57,6 +86,13 @@ struct SendMessage {
     text: String,
     parse_mode: String,
     disable_web_page_preview: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct ForwardMessage {
+    chat_id: String,
+    from_chat_id: String,
+    message_id: usize,
 }
 
 impl Default for SendMessage {
