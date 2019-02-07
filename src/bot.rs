@@ -1,5 +1,5 @@
-use hyper::header::{ContentLength, ContentType};
 use reqwest;
+use reqwest::header::{HeaderValue, CONTENT_LENGTH, CONTENT_TYPE};
 use reqwest::Url;
 use serde::Serialize;
 use serde_json;
@@ -28,15 +28,15 @@ impl Bot {
         );
 
         let href = Url::parse(url.as_str()).unwrap();
-        let mut req = reqwest::Client::new().post(href);
+        let req = reqwest::Client::new().post(href);
         let content = serde_json::to_string(&body).unwrap();
         let content_len = content.len();
 
         // Because, req.json(&body) sends noise instead of JSON
-        req.body(content);
-        req.header(ContentType::json());
-        req.header(ContentLength(content_len as u64));
-        req.send()
+        req.body(content)
+            .header(CONTENT_TYPE, HeaderValue::from_static("application/json"))
+            .header(CONTENT_LENGTH, HeaderValue::from(content_len))
+            .send()
     }
 
     pub fn send_message(&self, chat_id: String, text: String) -> ReqwestResult {

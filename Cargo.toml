@@ -5,7 +5,7 @@ authors = ["Sergey Sova <mail@sergeysova.com>"]
 edition = "2018"
 
 [dependencies]
-reqwest = "=0.8.6"
+reqwest = "=0.9.9"
 env_logger = "0.5.12"
 select = "0.4.2"
 dotenv = "0.13.0"
