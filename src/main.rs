@@ -45,6 +45,13 @@ fn run() -> Result<(), Box<dyn Error>> {
         .ok()
         .expect("Expected BOT_TOKEN env var");
     let chat_id = env::var("CHAT_ID").ok().expect("Expected CHAT_ID env var");
+    let forward_to = env::var("FORWARD_ID")
+        .ok()
+        .expect("Expected FORWARD_ID env var");
+    let forward_to = forward_to.split(':').fold(Vec::new(), |mut v, s| {
+        v.push(s);
+        v
+    });
 
     let last_id = read_last_id().unwrap_or(0);
     let mut last_id_to_be_saved = last_id;
@@ -60,11 +67,18 @@ fn run() -> Result<(), Box<dyn Error>> {
     } else {
         let bot = bot::Bot::new(bot_token);
 
-        for (ref id, link) in links.iter().rev() {
+        for (id, link) in links.into_iter().rev() {
             println!("\n// ——— //\nFetching #{} — {}", id, link);
-            let article = parse_article(link, *id)?;
+            let article = parse_article(link, id)?;
 
-            let mut _res = bot.send_message(chat_id.clone(), article.head())?;
+            let res = bot.send_message(chat_id.clone(), article.head())?;
+
+            if let Some(message_id) = bot::Bot::response_id(res) {
+                for forward_to in forward_to.iter() {
+                    let _ =
+                        bot.forward_message(chat_id.clone(), forward_to.to_string(), message_id)?;
+                }
+            }
 
             let mut _res = bot.send_message(chat_id.clone(), article.core_updates())?;
 
@@ -72,8 +86,8 @@ fn run() -> Result<(), Box<dyn Error>> {
 
             let mut _res = bot.send_message(chat_id.clone(), article.crate_of_week())?;
 
-            if *id > last_id_to_be_saved {
-                last_id_to_be_saved = *id;
+            if id > last_id_to_be_saved {
+                last_id_to_be_saved = id;
             }
         }
 
