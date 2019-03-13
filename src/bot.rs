@@ -62,14 +62,15 @@ impl Bot {
             message_id,
         };
 
-        self.send("sendMessage", &body)
+        self.send("forwardMessage", &body)
     }
 
     pub fn response_id(mut res: reqwest::Response) -> Option<usize> {
         res.text()
             .ok()
             .and_then(|text| serde_json::from_str(&text).ok())
-            .map(|msg: Message| msg.message_id)
+            .and_then(|msg: Response<Message>| msg.to_option())
+            .map(|msg| msg.message_id)
     }
 }
 
@@ -102,6 +103,22 @@ impl Default for SendMessage {
             text: "".to_string(),
             parse_mode: "HTML".to_string(),
             disable_web_page_preview: false,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum Response<T> {
+    Ok { ok: bool, result: T },
+    Error { ok: bool },
+}
+
+impl<T> Response<T> {
+    pub fn to_option(self) -> Option<T> {
+        match self {
+            Response::Ok { result, .. } => Some(result),
+            Response::Error { .. } => None,
         }
     }
 }

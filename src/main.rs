@@ -45,6 +45,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         .ok()
         .expect("Expected BOT_TOKEN env var");
     let chat_id = env::var("CHAT_ID").ok().expect("Expected CHAT_ID env var");
+    let dev = env::var("DEV").ok().is_some();
     let forward_to = env::var("FORWARD_ID")
         .ok()
         .expect("Expected FORWARD_ID env var");
@@ -58,6 +59,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     println!("Last ID: {}", last_id);
     println!("Starting fetch articles list...");
+
     let html = reqwest::get("https://this-week-in-rust.org")?.text()?;
     let document = Document::from(html.as_str());
     let links = parse_home_page(&document, last_id);
@@ -74,10 +76,15 @@ fn run() -> Result<(), Box<dyn Error>> {
             let res = bot.send_message(chat_id.clone(), article.head())?;
 
             if let Some(message_id) = bot::Bot::response_id(res) {
+                println!("Trying forward to: {:?}", forward_to);
+
                 for forward_to in forward_to.iter() {
-                    let _ =
+                    let mut res =
                         bot.forward_message(chat_id.clone(), forward_to.to_string(), message_id)?;
+                    println!("{:#?}", res.text()?);
                 }
+            } else {
+                println!("Can't forward");
             }
 
             let mut _res = bot.send_message(chat_id.clone(), article.core_updates())?;
@@ -91,10 +98,11 @@ fn run() -> Result<(), Box<dyn Error>> {
             }
         }
 
-        save_last_id(last_id_to_be_saved)?;
+        if !dev {
+            println!("Last ID: {}", last_id_to_be_saved);
+            save_last_id(last_id_to_be_saved)?;
+        }
     }
-
-    println!("Last ID: {}", last_id_to_be_saved);
 
     Ok(())
 }
