@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::fmt;
 
 use crate::select;
@@ -22,9 +23,43 @@ impl Link {
     }
 }
 
+fn link_to_github(link: &String) -> String {
+    let re = Regex::new(r"https?://github.com/(.*)$").unwrap();
+    re.replace_all(&link, "$1").to_string()
+}
+
+fn link_as_clear(link: &String) -> String {
+    let re = Regex::new(r"/.+$").unwrap();
+    let preshort = link
+        .replace("https://", "")
+        .replace("http://", "")
+        .replace(".html", "")
+        .replace(".htm", "");
+    re.replace_all(preshort.as_ref(), "").to_string()
+}
+
+fn link_to_medium(link: &String) -> String {
+    let re = Regex::new(r"https?://medium.com/(.+)/.+").unwrap();
+    re.replace_all(&link, "medium.com/$1").to_string()
+}
+
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{text}\n{link}\n", link = self.link, text = self.text)
+        let link_text = if self.link.contains("github.com") {
+            link_to_github(&self.link)
+        } else if self.link.contains("medium.com") {
+            link_to_medium(&self.link)
+        } else {
+            link_as_clear(&self.link)
+        };
+
+        write!(
+            f,
+            "{text}\n<a href=\"{link}\">{link_text}</a>\n",
+            link = self.link,
+            text = self.text,
+            link_text = link_text
+        )
     }
 }
 
