@@ -1,3 +1,4 @@
+use failure::Fail;
 use regex::Regex;
 use std::fmt;
 
@@ -12,14 +13,28 @@ pub struct Link {
     text: String,
 }
 
+#[derive(Debug, Fail)]
+pub enum LinkFromNodeError {
+    #[fail(display = "next element not found")]
+    NextNotFound,
+    #[fail(display = "[href] nof found")]
+    HrefNotFound,
+}
+
 impl Link {
-    pub fn from_node<'a>(node: select::node::Node<'a>) -> Link {
+    pub fn from_node<'a>(node: select::node::Node<'a>) -> Result<Link, LinkFromNodeError> {
         let text = node.text().replace(". [discuss]", "");
-        let link = node.find(Name("a")).next().unwrap().attr("href").unwrap();
-        Link {
+        let link = node
+            .find(Name("a"))
+            .next()
+            .ok_or(LinkFromNodeError::NextNotFound)?
+            .attr("href")
+            .ok_or(LinkFromNodeError::HrefNotFound)?;
+
+        Ok(Link {
             link: escape(link.to_string()),
             text: escape(text),
-        }
+        })
     }
 }
 

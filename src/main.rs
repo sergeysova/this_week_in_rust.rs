@@ -9,10 +9,10 @@ extern crate hyper;
 extern crate serde_json;
 
 use dotenv::dotenv;
+use failure::Error;
 use select::document::Document;
 
 use std::env;
-use std::error::Error;
 use std::fs;
 
 mod bot;
@@ -28,7 +28,7 @@ fn file_path() -> std::path::PathBuf {
     dirs::config_dir().unwrap_or("/tmp/".into()).join(FILE_NAME)
 }
 
-fn read_last_id() -> Result<i32, Box<dyn Error + 'static>> {
+fn read_last_id() -> Result<i32, Error> {
     let src = fs::read(file_path())?;
     let src = String::from_utf8_lossy(&src);
     let value: i32 = src.trim().parse()?;
@@ -40,19 +40,21 @@ fn save_last_id(id: i32) -> std::io::Result<()> {
     fs::write(file_path(), id.to_string())
 }
 
-fn run() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Error> {
+    env_logger::init();
+    dotenv()?;
+
     let bot_token = env::var("BOT_TOKEN")
         .ok()
         .expect("Expected BOT_TOKEN env var");
     let chat_id = env::var("CHAT_ID").ok().expect("Expected CHAT_ID env var");
     let dev = env::var("DEV").ok().is_some();
-    let forward_to = env::var("FORWARD_ID")
-        .ok()
-        .expect("Expected FORWARD_ID env var");
-    let forward_to = forward_to.split(':').fold(Vec::new(), |mut v, s| {
-        v.push(s);
-        v
-    });
+    let forward_to = env::var("FORWARD_ID").ok().unwrap_or_default();
+    let forward_to: Vec<&str> = forward_to
+        .split(':')
+        .into_iter()
+        .filter(|v| !v.is_empty())
+        .collect();
 
     let last_id = read_last_id().unwrap_or(0);
     let mut last_id_to_be_saved = last_id;
@@ -62,7 +64,7 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     let html = reqwest::get("https://this-week-in-rust.org")?.text()?;
     let document = Document::from(html.as_str());
-    let links = parse_home_page(&document, last_id);
+    let links = parse_home_page(&document, last_id)?;
 
     if links.len() == 0 {
         println!("Nothing to send");
@@ -79,6 +81,7 @@ fn run() -> Result<(), Box<dyn Error>> {
                 println!("Trying forward to: {:?}", forward_to);
 
                 for forward_to in forward_to.iter() {
+                    println!("{:?}", forward_to);
                     let mut res =
                         bot.forward_message(chat_id.clone(), forward_to.to_string(), message_id)?;
                     println!("{:#?}", res.text()?);
@@ -105,11 +108,4 @@ fn run() -> Result<(), Box<dyn Error>> {
     }
 
     Ok(())
-}
-
-fn main() {
-    env_logger::init();
-    dotenv().expect("Failed to run dotenv");
-
-    run().unwrap();
 }
