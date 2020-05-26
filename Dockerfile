@@ -22,5 +22,6 @@ RUN seq 1 8 | xargs -I{} mkdir -p /usr/share/man/man{} && \
 WORKDIR /app
 
 COPY --from=build /directory/target/release/this_week_in_rust ./bot
+COPY ./entrypoint.sh ./
 
-CMD ["/app/bot"]
+CMD ["/app/entrypoint.sh"]
