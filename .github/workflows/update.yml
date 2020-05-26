@@ -11,6 +11,9 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: last-id
+      - if: failure()
+        shell: bash
+        run: echo ""
       - name: post to this week in rust
         uses: sergeysova/this_week_in_rust.rs@master
         with:
