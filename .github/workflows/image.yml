@@ -1,0 +1,31 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - ".github/workflows/image.yml"
+      - "src/**"
+      - "Dockerfile"
+      - "Cargo.lock"
+      - "Cargo.toml"
+
+jobs:
+  build main image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Publish Docker
+        uses: sergeysova/docker-publish-action@v1
+        with:
+          image: sergeysova/this_week_in_rust.rs/main
+          registry: docker.pkg.github.com
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          snapshot: "true"
+          tag_semver: skip
+          tag_separator: "@"
+          semver_higher: "true"
