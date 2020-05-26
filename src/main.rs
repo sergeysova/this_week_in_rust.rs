@@ -34,7 +34,7 @@ fn file_path() -> std::path::PathBuf {
 }
 
 fn read_last_id() -> Result<i32, Error> {
-    println!("Reading config path: {:?}", file_path().to_str());
+    println!("Reading last-id at: {:?}", file_path().to_str());
     let src = fs::read(file_path())?;
     let src = String::from_utf8_lossy(&src);
     let value: i32 = src.trim().parse()?;
@@ -43,6 +43,7 @@ fn read_last_id() -> Result<i32, Error> {
 }
 
 fn save_last_id(id: i32) -> std::io::Result<()> {
+    println!("Writing last-id {} to: {:?}", id, file_path().to_str());
     fs::write(file_path(), id.to_string())
 }
 
