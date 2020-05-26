@@ -25,7 +25,12 @@ use crate::parsers::*;
 const FILE_NAME: &'static str = "this_week_in_rust.last_id";
 
 fn file_path() -> std::path::PathBuf {
-    dirs::config_dir().unwrap_or("/tmp/".into()).join(FILE_NAME)
+    let config_dir: Option<std::path::PathBuf> = env::var("CONFIG_DIR")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .or_else(|| dirs::config_dir());
+
+    config_dir.unwrap_or("/tmp/".into()).join(FILE_NAME)
 }
 
 fn read_last_id() -> Result<i32, Error> {
