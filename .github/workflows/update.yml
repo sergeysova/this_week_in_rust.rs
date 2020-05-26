@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: create dir
         shell: bash
-        run: touch /tmp/this_week_in_rust.last_id
+        run: touch ./.env
       # - name: get latest last-id
       #   uses: actions/download-artifact@v1
       #   with:
