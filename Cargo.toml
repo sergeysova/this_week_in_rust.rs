@@ -4,6 +4,9 @@ version = "0.3.1"
 authors = ["Sergey Sova <mail@sergeysova.com>"]
 edition = "2018"
 
+[bin]
+name = "this_week_in_rust"
+
 [dependencies]
 reqwest = "=0.9.9"
 env_logger = "0.5.12"
