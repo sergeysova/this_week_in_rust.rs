@@ -34,7 +34,7 @@ fn file_path() -> std::path::PathBuf {
 }
 
 fn read_last_id() -> Result<i32, Error> {
-    println!("Reading config path: {}", file_path().to_str());
+    println!("Reading config path: {:?}", file_path().to_str());
     let src = fs::read(file_path())?;
     let src = String::from_utf8_lossy(&src);
     let value: i32 = src.trim().parse()?;
