@@ -12,7 +12,8 @@ on:
       - "Cargo.toml"
 
 jobs:
-  build main image:
+  build:
+    name: build main image
     runs-on: ubuntu-latest
 
     steps:
