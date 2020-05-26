@@ -17,7 +17,8 @@ runs:
   using: 'docker'
   image: 'docker://docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main'
   # image: 'Dockerfile'
-  args:
-    - ${{ inputs.bot-token }}
-    - ${{ inputs.chat-id }}
-    - ${{ inputs.config-dir }}
+  entrypoint: /app/bot
+  env:
+    BOT_TOKEN: ${{ inputs.bot-token }}
+    CHAT_ID: ${{ inputs.chat-id }}
+    CONFIG_DIR: ${{ inputs.config-dir }}
