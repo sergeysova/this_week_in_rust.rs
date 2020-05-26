@@ -4,7 +4,7 @@ FROM rust:$RUST_VERSION as build
 
 WORKDIR /directory
 
-COPY ./Cargo.lock ./Cargo.toml ./src ./
+COPY ./Cargo.toml ./src ./
 
 RUN cargo build --release
 
