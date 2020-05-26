@@ -18,6 +18,7 @@ jobs:
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
       - name: post to this week in rust
+        if: always()
         uses: ./
         with:
           bot-token: ${{ secrets.BOT_TOKEN }}
