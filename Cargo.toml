@@ -4,8 +4,9 @@ version = "0.3.1"
 authors = ["Sergey Sova <mail@sergeysova.com>"]
 edition = "2018"
 
-[bin]
+[[bin]]
 name = "this_week_in_rust"
+path = "src/main.rs"
 
 [dependencies]
 reqwest = "=0.9.9"
