@@ -15,7 +15,8 @@ outputs:
     description: 'last read id'
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'docker://docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main'
+  # image: 'Dockerfile'
   args:
     - ${{ inputs.bot-token }}
     - ${{ inputs.chat-id }}

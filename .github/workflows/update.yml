@@ -14,12 +14,16 @@ jobs:
       - if: failure()
         shell: bash
         run: echo ""
+
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
       - name: post to this week in rust
-        uses: sergeysova/this_week_in_rust.rs@master
+        uses: ./
         with:
           bot-token: ${{ secrets.BOT_TOKEN }}
           chat-id: ${{ secrets.CHAT_ID }}
           config-dir: /config
+
       - name: save updated last-id
         uses: actions/upload-artifact@v1
         with:
