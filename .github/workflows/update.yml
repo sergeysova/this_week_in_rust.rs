@@ -7,13 +7,13 @@ jobs:
     name: check this week in rust and post to telegram
     runs-on: ubuntu-latest
     steps:
-      - name: get latest last-id
-        uses: actions/download-artifact@v1
-        with:
-          name: last-id
-      - if: failure()
-        shell: bash
-        run: echo ""
+      # - name: get latest last-id
+      #   uses: actions/download-artifact@v1
+      #   with:
+      #     name: last-id
+      # - if: failure()
+      #   shell: bash
+      #   run: echo ""
 
       - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
