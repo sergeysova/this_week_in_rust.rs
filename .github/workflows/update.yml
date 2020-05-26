@@ -15,9 +15,9 @@ jobs:
       #   uses: actions/download-artifact@v1
       #   with:
       #     name: last-id
-      # - if: failure()
-      #   shell: bash
-      #   run: echo ""
+      - if: failure()
+        shell: bash
+        run: echo ""
 
       - run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin && \
