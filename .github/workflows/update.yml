@@ -1,0 +1,24 @@
+name: Check update
+
+on: [push]
+
+jobs:
+  publish:
+    name: check this week in rust and post to telegram
+    runs-on: ubuntu-latest
+    steps:
+      - name: get latest last-id
+        uses: actions/download-artifact@v1
+        with:
+          name: last-id
+      - name: post to this week in rust
+        uses: sergeysova/this_week_in_rust.rs@master
+        with:
+          bot-token: ${{ secrets.BOT_TOKEN }}
+          chat-id: ${{ secrets.CHAT_ID }}
+          config-dir: /config
+      - name: save updated last-id
+        uses: actions/upload-artifact@v1
+        with:
+          name: last-id
+          path: /config/this_week_in_rust.last_id

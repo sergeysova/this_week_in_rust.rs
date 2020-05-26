@@ -1,0 +1,22 @@
+name: 'ThisWeekInRust Internal Action'
+description: 'Action to once post to this week in rust'
+inputs:
+  bot-token:
+    description: 'Telegram bot token'
+    required: true
+  chat-id:
+    description: 'Telegram chat ID or @username'
+    required: true
+  config-dir:
+    description: 'Where search file this_week_in_rust.last_id'
+    required: true
+outputs:
+  last-id:
+    description: 'last read id'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.bot-token }}
+    - ${{ inputs.chat-id }}
+    - ${{ inputs.config-dir }}
