@@ -16,7 +16,9 @@ jobs:
       #   shell: bash
       #   run: echo ""
 
-      - run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      - run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin && \
+          docker pull docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main
 
       - name: post to this week in rust
         if: always()
