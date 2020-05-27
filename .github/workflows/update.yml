@@ -13,13 +13,15 @@ jobs:
         run: touch ./.env && touch /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
 
       - name: get latest last-id
-        uses: ./gist-read
+        uses: sergeysova/gist-read-action@master
         id: last-id
         with:
           gist_id: 9132dba40f4c806617043287a9f5d1e5
           file_name: this_week_in_rust.last_id
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: echo "${{ steps.last-id.outputs.content }}" > /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
 
       - run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin && \
