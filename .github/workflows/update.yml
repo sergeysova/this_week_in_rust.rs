@@ -18,7 +18,7 @@ jobs:
           gist_id: 9132dba40f4c806617043287a9f5d1e5
           file_name: this_week_in_rust.last_id
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
       - name: save latest id "${{ steps.last-id.outputs.content }}" to file
         run: echo "${{ steps.last-id.outputs.content }}" > /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
@@ -35,8 +35,16 @@ jobs:
           chat-id: ${{ secrets.CHAT_ID }}
           config-dir: /github/workspace/
 
-      - name: save updated last-id
-        uses: actions/upload-artifact@v1
+      - name: read updated last-id
+        id: updated
+        run: echo "::set-output name=value::$(cat "/home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id"
+
+      - name: save last-id to gist
+        if: steps.last_id.outputs.content != steps.updated.outputs.value
+        uses: sergeysova/gist-write-action@master
         with:
-          name: last-id
-          path: /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
+          gist_id: 9132dba40f4c806617043287a9f5d1e5
+          file_name: this_week_in_rust.last_id
+          content: ${{ steps.updated.outputs.value }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
