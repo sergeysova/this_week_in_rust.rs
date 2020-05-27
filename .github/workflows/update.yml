@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: create dir
         shell: bash
-        run: touch ./.env && touch /github/workspace/this_week_in_rust.last_id
+        run: touch ./.env && touch /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
       # - name: get latest last-id
       #   uses: actions/download-artifact@v1
       #   with:
@@ -36,4 +36,4 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: last-id
-          path: /github/workspace/this_week_in_rust.last_id
+          path: /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
