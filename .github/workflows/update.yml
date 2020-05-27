@@ -8,11 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: create dir
-        shell: bash
-        run: touch ./.env && touch /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
+      - name: create env
+        run: touch ./.env
 
-      - name: get latest last-id
+      - name: read latest last-id
         uses: sergeysova/gist-read-action@master
         id: last-id
         with:
@@ -21,14 +20,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: echo "${{ steps.last-id.outputs.content }}" > /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
+      - name: save latest id "${{ steps.last-id.outputs.content }}" to file
+        run: echo "${{ steps.last-id.outputs.content }}" > /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
 
-      - run: |
+      - name: login to docker.pkg.github.com
+        run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin && \
           docker pull docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main
 
-      - name: post to this week in rust
-        if: always()
+      - name: run crate to get digests and post to telegram
         uses: ./
         with:
           bot-token: ${{ secrets.BOT_TOKEN }}
