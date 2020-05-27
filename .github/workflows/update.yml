@@ -37,7 +37,7 @@ jobs:
 
       - name: read updated last-id
         id: updated
-        run: echo "::set-output name=value::$(cat "/home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id"
+        run: echo "::set-output name=value::$(cat /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id)"
 
       - name: save last-id to gist
         if: steps.last_id.outputs.content != steps.updated.outputs.value
