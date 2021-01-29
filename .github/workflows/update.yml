@@ -26,10 +26,10 @@ jobs:
       - name: save latest id "${{ steps.last-id.outputs.content }}" to file
         run: echo "${{ steps.last-id.outputs.content }}" > /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
 
-#      - name: login to docker.pkg.github.com
-#        run: |
-#          echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin && \
-#          docker pull docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main
+      - name: login to docker.pkg.github.com
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin && \
+          docker pull docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main
 
       - name: run crate to get digests and post to telegram
         uses: ./
