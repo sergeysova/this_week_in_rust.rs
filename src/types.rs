@@ -1,6 +1,6 @@
 use failure::Fail;
 use regex::Regex;
-use std::fmt;
+use std::{fmt, iter::FromIterator};
 
 use crate::select;
 use crate::select::predicate::Name;
@@ -78,8 +78,19 @@ impl fmt::Display for Link {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct LinksList(Vec<Link>);
+
+impl LinksList {
+    fn fmt_with_subtitle(&self, f: &mut fmt::Formatter, subtitle: &str) -> fmt::Result {
+        if self.0.is_empty() {
+            return Ok(());
+        }
+
+        write!(f, "\n<b>{}</b>\n", subtitle)?;
+        write!(f, "{}", self)
+    }
+}
 
 impl fmt::Display for LinksList {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -94,18 +105,33 @@ impl fmt::Display for LinksList {
     }
 }
 
-#[derive(Debug)]
-pub struct News(LinksList);
-
-impl News {
-    pub fn new(list: Vec<Link>) -> Self {
-        News(LinksList(list))
+impl FromIterator<Link> for LinksList {
+    fn from_iter<T: IntoIterator<Item = Link>>(iter: T) -> Self {
+        LinksList(iter.into_iter().collect())
     }
 }
 
-impl fmt::Display for News {
+#[derive(Debug)]
+pub struct CommunityUpdates {
+    pub official: LinksList,
+    pub newsletters: LinksList,
+    pub tooling: LinksList,
+    pub observations: LinksList,
+    pub walkthoughs: LinksList,
+    pub misc: LinksList,
+}
+
+impl fmt::Display for CommunityUpdates {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<b>News</b>\n\n{}", self.0)
+        write!(f, "<b>Updates from Rust Community</b>\n")?;
+        self.official.fmt_with_subtitle(f, "Official")?;
+        self.newsletters.fmt_with_subtitle(f, "Newsletters")?;
+        self.tooling
+            .fmt_with_subtitle(f, "Project/Tooling Updates")?;
+        self.observations
+            .fmt_with_subtitle(f, "Observations/Thoughts")?;
+        self.walkthoughs.fmt_with_subtitle(f, "Rust Walkthroughs")?;
+        self.misc.fmt_with_subtitle(f, "Miscellaneous")
     }
 }
 
@@ -129,15 +155,15 @@ impl fmt::Display for CrateOfWeek {
 }
 
 #[derive(Debug)]
-pub struct Updates(LinksList);
+pub struct CoreUpdates(LinksList);
 
-impl Updates {
+impl CoreUpdates {
     pub fn new(list: Vec<Link>) -> Self {
-        Updates(LinksList(list))
+        CoreUpdates(LinksList(list))
     }
 }
 
-impl fmt::Display for Updates {
+impl fmt::Display for CoreUpdates {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "<b>Updates from core</b>\n\n{}", self.0)
     }
@@ -148,9 +174,9 @@ pub struct Article {
     pub(super) id: i32,
     pub(super) date: String,
     pub(super) link: String,
-    pub(super) news: News,
+    pub(super) community: CommunityUpdates,
     pub(super) crate_of_week: CrateOfWeek,
-    pub(super) updates: Updates,
+    pub(super) core: CoreUpdates,
 }
 
 impl Article {
@@ -163,8 +189,8 @@ impl Article {
         )
     }
 
-    pub fn news(&self) -> String {
-        format!("{}", self.news)
+    pub fn community_updates(&self) -> String {
+        format!("{}", self.community)
     }
 
     pub fn crate_of_week(&self) -> String {
@@ -172,7 +198,7 @@ impl Article {
     }
 
     pub fn core_updates(&self) -> String {
-        format!("{}", self.updates)
+        format!("{}", self.core)
     }
 }
 
