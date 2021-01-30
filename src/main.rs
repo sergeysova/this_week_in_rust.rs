@@ -99,7 +99,7 @@ fn main() -> Result<(), Error> {
 
             let mut _res = bot.send_message(chat_id.clone(), article.core_updates())?;
 
-            let mut _res = bot.send_message(chat_id.clone(), article.news())?;
+            let mut _res = bot.send_message(chat_id.clone(), article.community_updates())?;
 
             let mut _res = bot.send_message(chat_id.clone(), article.crate_of_week())?;
 

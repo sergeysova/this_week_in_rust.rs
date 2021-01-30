@@ -48,7 +48,7 @@ pub fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, ParseCrat
 }
 
 #[derive(Debug, Fail)]
-pub enum ParseNewsError {
+pub enum ParseCommunityUpdatesError {
     #[fail(display = "#news-blog-posts not found")]
     IdNotFound,
 
@@ -56,20 +56,44 @@ pub enum ParseNewsError {
     NextNotFound,
 }
 
-pub fn parse_news(doc: &Document) -> Result<Vec<Link>, ParseNewsError> {
-    Ok(doc
-        .find(Attr("id", "news-blog-posts"))
+fn parse_community_updates_subtopic(
+    updates: &Document,
+    topic: &str,
+) -> Result<LinksList, ParseCommunityUpdatesError> {
+    Ok(updates
+        .find(Attr("id", topic))
         .next()
-        .ok_or(ParseNewsError::IdNotFound)?
+        .ok_or(ParseCommunityUpdatesError::IdNotFound)?
         .next()
-        .ok_or(ParseNewsError::NextNotFound)?
+        .ok_or(ParseCommunityUpdatesError::NextNotFound)?
         .next()
-        .ok_or(ParseNewsError::NextNotFound)?
+        .ok_or(ParseCommunityUpdatesError::NextNotFound)?
         .find(Name("ul").descendant(Name("li")))
         .map(Link::from_node)
         .filter(Result::is_ok)
         .map(|v| v.expect("Here should be only Ok"))
         .collect())
+}
+
+// Topics list is taken from https://github.com/rust-lang/this-week-in-rust/blob/master/draft/2021-02-03-this-week-in-rust.md
+pub fn parse_updates_from_community(doc: &Document) -> Result<CommunityUpdates, ParseCommunityUpdatesError> {
+    // Check that community updates section exists
+    doc.find(Attr("id", "updates-from-rust-community"))
+        .next()
+        .ok_or(ParseCommunityUpdatesError::IdNotFound)?;
+
+    // Unfortunately TWiR sometimes skips some topics in the atricle, so best that can be done error-handling wise is to ignore the missing ones
+    let collect_subtopic =
+        |topic| parse_community_updates_subtopic(&doc, topic).unwrap_or_default();
+
+    Ok(CommunityUpdates {
+        official: collect_subtopic("official"),
+        newsletters: collect_subtopic("newsletters"),
+        tooling: collect_subtopic("projecttooling-updates"),
+        observations: collect_subtopic("observationsthoughts"),
+        walkthoughs: collect_subtopic("rust-walkthroughs"),
+        misc: collect_subtopic("miscellaneous"),
+    })
 }
 
 #[derive(Debug, Fail)]
@@ -122,17 +146,17 @@ pub fn parse_article(link: &str, id: i32) -> Result<Article, Error> {
     let document = Document::from(html.as_str());
 
     let date = parse_article_date(&document)?;
-    let news = News::new(parse_news(&document)?);
+    let community = parse_updates_from_community(&document)?;
     let crate_of_week = parse_crate_of_week(&document)?;
-    let updates = Updates::new(parse_updates_from_core(&document)?);
+    let core = CoreUpdates::new(parse_updates_from_core(&document)?);
 
     Ok(Article {
         id,
         link: link.to_string(),
         date,
-        news,
+        community,
         crate_of_week,
-        updates,
+        core,
     })
 }
 
