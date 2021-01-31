@@ -15,7 +15,7 @@ jobs:
         run: touch ./.env
 
       - name: read latest last-id
-        uses: sergeysova/gist-read-action@master
+        uses: sergeysova/gist-read-action@v1
         id: last-id
         with:
           gist_id: 9132dba40f4c806617043287a9f5d1e5
@@ -23,7 +23,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
-      - name: save latest id "${{ steps.last-id.outputs.content }}" to file
+      - name: save latest id "${{ steps.last-id.outputs.content }}" to a file
         run: echo "${{ steps.last-id.outputs.content }}" > /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id
 
       - name: login to docker.pkg.github.com
@@ -44,7 +44,7 @@ jobs:
 
       - name: save last-id to gist
         if: steps.last_id.outputs.content != steps.updated.outputs.value
-        uses: sergeysova/gist-write-action@master
+        uses: sergeysova/gist-write-action@v1
         with:
           gist_id: 9132dba40f4c806617043287a9f5d1e5
           file_name: this_week_in_rust.last_id
