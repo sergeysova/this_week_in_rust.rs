@@ -29,8 +29,8 @@ jobs:
 
       - name: login to docker.pkg.github.com
         run: |
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://docker.pkg.github.com -u ${{ github.actor }} --password-stdin && \
-          docker pull docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin && \
+          docker pull ghcr.io/sergeysova/this_week_in_rust.rs/main
 
       - name: run crate to get digests and post to telegram
         uses: ./
