@@ -15,7 +15,7 @@ outputs:
     description: 'last read id'
 runs:
   using: 'docker'
-  image: 'docker://docker.pkg.github.com/sergeysova/this_week_in_rust.rs/main'
+  image: 'docker://ghcr.io/sergeysova/this_week_in_rust.rs/main'
   # image: 'Dockerfile'
   entrypoint: /app/bot
   env:
