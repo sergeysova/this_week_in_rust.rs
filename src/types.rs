@@ -22,7 +22,7 @@ pub enum LinkFromNodeError {
 }
 
 impl Link {
-    pub fn from_node<'a>(node: select::node::Node<'a>) -> Result<Link, LinkFromNodeError> {
+    pub fn from_node(node: select::node::Node<'_>) -> Result<Link, LinkFromNodeError> {
         let text = node.text().replace(". [discuss]", "");
         let link = node
             .find(Name("a"))
@@ -38,12 +38,12 @@ impl Link {
     }
 }
 
-fn link_to_github(link: &String) -> String {
+fn link_to_github(link: &str) -> String {
     let re = Regex::new(r"https?://github.com/(.*)$").unwrap();
-    re.replace_all(&link, "$1").to_string()
+    re.replace_all(link, "$1").to_string()
 }
 
-fn link_as_clear(link: &String) -> String {
+fn link_as_clear(link: &str) -> String {
     let re = Regex::new(r"/.+$").unwrap();
     let preshort = link
         .replace("https://", "")
@@ -53,9 +53,9 @@ fn link_as_clear(link: &String) -> String {
     re.replace_all(preshort.as_ref(), "").to_string()
 }
 
-fn link_to_medium(link: &String) -> String {
+fn link_to_medium(link: &str) -> String {
     let re = Regex::new(r"https?://medium.com/(.+)/.+").unwrap();
-    re.replace_all(&link, "medium.com/$1").to_string()
+    re.replace_all(link, "medium.com/$1").to_string()
 }
 
 impl fmt::Display for Link {
@@ -111,27 +111,24 @@ impl FromIterator<Link> for LinksList {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct NamedLinksList {
+    pub name: String,
+    pub links: LinksList,
+}
+
 #[derive(Debug)]
 pub struct CommunityUpdates {
-    pub official: LinksList,
-    pub newsletters: LinksList,
-    pub tooling: LinksList,
-    pub observations: LinksList,
-    pub walkthoughs: LinksList,
-    pub misc: LinksList,
+    pub updates: Vec<NamedLinksList>,
 }
 
 impl fmt::Display for CommunityUpdates {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "<b>Updates from Rust Community</b>\n")?;
-        self.official.fmt_with_subtitle(f, "Official")?;
-        self.newsletters.fmt_with_subtitle(f, "Newsletters")?;
-        self.tooling
-            .fmt_with_subtitle(f, "Project/Tooling Updates")?;
-        self.observations
-            .fmt_with_subtitle(f, "Observations/Thoughts")?;
-        self.walkthoughs.fmt_with_subtitle(f, "Rust Walkthroughs")?;
-        self.misc.fmt_with_subtitle(f, "Miscellaneous")
+        writeln!(f, "<b>Updates from Rust Community</b>")?;
+        for nlinks in &self.updates {
+            nlinks.links.fmt_with_subtitle(f, &nlinks.name)?;
+        }
+        Ok(())
     }
 }
 
@@ -213,7 +210,10 @@ mod tests {
             text: "BAR".to_string(),
         };
 
-        assert_eq!(format!("{}", link), "BAR\nFOO\n".to_string());
+        assert_eq!(
+            format!("{}", link),
+            "BAR\n<a href=\"FOO\">FOO</a>\n".to_string()
+        );
     }
 
     #[test]
@@ -233,7 +233,7 @@ mod tests {
             },
         ]);
 
-        let expected = "textA\nlinkA\n\ntextB\nlinkB\n\ntextC\nlinkC\n".to_string();
+        let expected = "textA\n<a href=\"linkA\">linkA</a>\n\ntextB\n<a href=\"linkB\">linkB</a>\n\ntextC\n<a href=\"linkC\">linkC</a>\n".to_string();
 
         assert_eq!(format!("{}", links), expected);
     }
