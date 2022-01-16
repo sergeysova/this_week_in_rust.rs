@@ -1,6 +1,9 @@
+use std::iter::FromIterator;
+
 use failure::{Error, Fail};
 use select::document::Document;
-use select::predicate::{Attr, Class, Name, Predicate};
+use select::node::Node;
+use select::predicate::{And, Class, Name, Predicate};
 
 use crate::html::escape;
 use crate::types::*;
@@ -14,115 +17,110 @@ pub enum ParseCrateOfWeekError {
     LinkNotFound,
 }
 
-pub fn parse_crate_of_week(document: &Document) -> Result<CrateOfWeek, ParseCrateOfWeekError> {
-    let p = document
-        .find(Attr("id", "crate-of-the-week"))
-        .next()
-        .ok_or(ParseCrateOfWeekError::ParagraphNotFound)?
-        .next()
-        .ok_or(ParseCrateOfWeekError::ParagraphNotFound)?
-        .next()
-        .ok_or(ParseCrateOfWeekError::ParagraphNotFound)?;
+pub fn parse_crate_of_week(article: &'_ Node) -> Result<CrateOfWeek, ParseCrateOfWeekError> {
+    let mut in_cow = false;
 
-    let text = p.text();
-    let link = p
-        .find(Name("a"))
-        .take(1)
-        .map(|node| {
-            (
-                node.attr("href").expect("node has no href attribute"),
-                node.text(),
-            )
-        })
-        .collect::<Vec<_>>();
+    for section in article.children() {
+        match section.name().unwrap_or("") {
+            "h2" => in_cow = section.text() == "Crate of the Week",
+            "p" if in_cow => {
+                let text = section.text();
+                let link = section
+                    .find(Name("a"))
+                    .take(1)
+                    .map(|node| {
+                        (
+                            node.attr("href").expect("node has no href attribute"),
+                            node.text(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
 
-    println!("{:?}", p);
+                let (link, name) = link.get(0).ok_or(ParseCrateOfWeekError::LinkNotFound)?;
 
-    let (link, name) = link.get(0).ok_or(ParseCrateOfWeekError::LinkNotFound)?;
+                return Ok(CrateOfWeek {
+                    name: escape(name.to_string()),
+                    text: escape(text),
+                    link: escape(link.to_string()),
+                });
+            }
+            _ => (),
+        }
+    }
 
-    Ok(CrateOfWeek {
-        name: escape(name.to_string()),
-        text: escape(text.to_string()),
-        link: escape(link.to_string()),
-    })
+    Err(ParseCrateOfWeekError::ParagraphNotFound)
 }
 
 #[derive(Debug, Fail)]
 pub enum ParseCommunityUpdatesError {
-    #[fail(display = "#news-blog-posts not found")]
-    IdNotFound,
-
-    #[fail(display = "next element not found")]
-    NextNotFound,
+    #[fail(display = "community updates not found")]
+    NotFound,
 }
 
-fn parse_community_updates_subtopic(
-    updates: &Document,
-    topic: &str,
-) -> Result<LinksList, ParseCommunityUpdatesError> {
-    Ok(updates
-        .find(Attr("id", topic))
-        .next()
-        .ok_or(ParseCommunityUpdatesError::IdNotFound)?
-        .next()
-        .ok_or(ParseCommunityUpdatesError::NextNotFound)?
-        .next()
-        .ok_or(ParseCommunityUpdatesError::NextNotFound)?
-        .find(Name("ul").descendant(Name("li")))
+fn parse_community_updates(
+    article: &'_ Node,
+) -> Result<CommunityUpdates, ParseCommunityUpdatesError> {
+    let mut updates = Vec::new();
+    let mut category = String::new();
+    let mut in_community = false;
+
+    for section in article.children() {
+        match section.name().unwrap_or("") {
+            "h2" => {
+                in_community = section.text() == "Updates from Rust Community";
+                category = String::new();
+            }
+            "h3" if in_community => {
+                category = section.text();
+            }
+            "ul" if in_community && !category.is_empty() => {
+                let links: Vec<Link> = links_from_html_list(&section);
+                if !links.is_empty() {
+                    updates.push(NamedLinksList {
+                        name: category,
+                        links: LinksList::from_iter(links.into_iter()),
+                    });
+                }
+                category = String::new();
+            }
+            _ => (),
+        }
+    }
+
+    Ok(CommunityUpdates { updates })
+}
+
+fn links_from_html_list(node: &'_ Node) -> Vec<Link> {
+    node.descendants()
         .map(Link::from_node)
-        .filter(Result::is_ok)
-        .map(|v| v.expect("Here should be only Ok"))
-        .collect())
-}
-
-// Topics list is taken from https://github.com/rust-lang/this-week-in-rust/blob/master/draft/2021-02-03-this-week-in-rust.md
-pub fn parse_updates_from_community(doc: &Document) -> Result<CommunityUpdates, ParseCommunityUpdatesError> {
-    // Check that community updates section exists
-    doc.find(Attr("id", "updates-from-rust-community"))
-        .next()
-        .ok_or(ParseCommunityUpdatesError::IdNotFound)?;
-
-    // Unfortunately TWiR sometimes skips some topics in the atricle, so best that can be done error-handling wise is to ignore the missing ones
-    let collect_subtopic =
-        |topic| parse_community_updates_subtopic(&doc, topic).unwrap_or_default();
-
-    Ok(CommunityUpdates {
-        official: collect_subtopic("official"),
-        newsletters: collect_subtopic("newsletters"),
-        tooling: collect_subtopic("projecttooling-updates"),
-        observations: collect_subtopic("observationsthoughts"),
-        walkthoughs: collect_subtopic("rust-walkthroughs"),
-        misc: collect_subtopic("miscellaneous"),
-    })
+        .filter_map(Result::ok)
+        .collect()
 }
 
 #[derive(Debug, Fail)]
 pub enum ParseUpdatesError {
-    #[fail(display = "#updates-from-rust-core not found")]
-    IdNotFound,
-
-    #[fail(display = "next element not found")]
-    NextNotFound,
+    #[fail(display = "updates from rust project not found")]
+    NotFound,
 }
 
-pub fn parse_updates_from_core(doc: &Document) -> Result<Vec<Link>, ParseUpdatesError> {
-    Ok(doc
-        .find(Attr("id", "updates-from-rust-core"))
-        .next()
-        .ok_or(ParseUpdatesError::IdNotFound)?
-        .next()
-        .ok_or(ParseUpdatesError::NextNotFound)?
-        .next()
-        .ok_or(ParseUpdatesError::NextNotFound)?
-        .next()
-        .ok_or(ParseUpdatesError::NextNotFound)?
-        .next()
-        .ok_or(ParseUpdatesError::NextNotFound)?
-        .find(Name("ul").descendant(Name("li")))
-        .map(Link::from_node)
-        .filter(Result::is_ok)
-        .map(|v| v.expect("Here should be only ok"))
-        .collect())
+pub fn parse_updates_from_core(article: &'_ Node) -> Result<Vec<Link>, ParseUpdatesError> {
+    let mut in_core = false;
+    for section in article.children() {
+        match section.name().unwrap_or("") {
+            "h2" => {
+                in_core = section.text() == "Updates from the Rust Project";
+            }
+            "ul" if in_core => {
+                let links: Vec<Link> = links_from_html_list(&section);
+                if !links.is_empty() {
+                    return Ok(links);
+                }
+            }
+            _ => (),
+        }
+    }
+
+    Err(ParseUpdatesError::NotFound)
 }
 
 #[derive(Debug, Fail)]
@@ -145,10 +143,19 @@ pub fn parse_article(link: &str, id: i32) -> Result<Article, Error> {
     let html = reqwest::get(link)?.text()?;
     let document = Document::from(html.as_str());
 
-    let date = parse_article_date(&document)?;
-    let community = parse_updates_from_community(&document)?;
-    let crate_of_week = parse_crate_of_week(&document)?;
-    let core = CoreUpdates::new(parse_updates_from_core(&document)?);
+    really_parse_article(&document, link, id)
+}
+
+fn really_parse_article(document: &Document, link: &str, id: i32) -> Result<Article, Error> {
+    let article = document
+        .find(And(Name("article"), Class("post-content")))
+        .next()
+        .ok_or(ParseCommunityUpdatesError::NotFound)?;
+
+    let date = parse_article_date(document)?;
+    let community = parse_community_updates(&article)?;
+    let crate_of_week = parse_crate_of_week(&article)?;
+    let core = CoreUpdates::new(parse_updates_from_core(&article)?);
 
     Ok(Article {
         id,
@@ -172,7 +179,7 @@ pub fn parse_home_page(doc: &Document, last_id: i32) -> Result<Vec<(i32, &str)>,
 
     for link in links {
         let title = link.text();
-        let last = title.split(" ").last();
+        let last = title.split(' ').last();
 
         match last {
             None => continue,
