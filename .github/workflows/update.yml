@@ -22,6 +22,9 @@ jobs:
           gist_id: 9132dba40f4c806617043287a9f5d1e5
           file_name: this_week_in_rust.last_id
         env:
+          # Must be a CLASSIC personal access token with the `gist` scope.
+          # Fine-grained PATs and the automatic GITHUB_TOKEN cannot access gists
+          # and return "401 Bad credentials".
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
       - name: save latest id "${{ steps.last-id.outputs.content }}" to a file
@@ -41,10 +44,10 @@ jobs:
 
       - name: read updated last-id
         id: updated
-        run: echo "::set-output name=value::$(cat /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id)"
+        run: echo "value=$(cat /home/runner/work/this_week_in_rust.rs/this_week_in_rust.rs/this_week_in_rust.last_id)" >> "$GITHUB_OUTPUT"
 
       - name: save last-id to gist
-        if: steps.last_id.outputs.content != steps.updated.outputs.value
+        if: steps.last-id.outputs.content != steps.updated.outputs.value
         uses: sergeysova/gist-write-action@v1
         with:
           gist_id: 9132dba40f4c806617043287a9f5d1e5
